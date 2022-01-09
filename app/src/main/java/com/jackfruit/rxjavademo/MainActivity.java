@@ -29,6 +29,7 @@ import io.reactivex.schedulers.Schedulers;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
   private static final String TAG = "MainActivity";
+
   private TextView mSkipTest;
   private TextView mDebounceTest;
   private TextView mDistinctTest;
@@ -348,12 +349,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void skipTest() {
     Observable<Integer> source = Observable.just(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
-    source.skip(4).subscribe(integer -> System.out.println("" + integer));
+    source.skip(4).subscribe(integer -> Log.i( TAG, "skipTest, accept: " + integer));
     // 打印结果：5678910
 
     // skipLast(n)操作表示从流的尾部跳过n个元素。
     Observable<Integer> source2 = Observable.just(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-    source2.skipLast(4).subscribe(integer -> System.out.println("" + integer));
+    source2.skipLast(4).subscribe(integer -> Log.i( TAG, "skipTest, accept: " + integer));
     //    打印结果：1 2 3 4 5 6
   }
 
@@ -386,9 +387,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         .subscribeOn(Schedulers.io())
         .debounce(1, TimeUnit.SECONDS)
         .blockingSubscribe(
-            item -> System.out.print(item + " "),
+            item -> Log.i( TAG, "debounceTest, accept: " + item ),
             Throwable::printStackTrace,
-            () -> System.out.println("onComplete"));
+            () -> Log.i(TAG, "onComplete"));
 
     // 打印：A D E onComplete
     // 上文代码中，数据源以一定的时间间隔发送A,B,C,D,E。操作符debounce的时间设为1秒，发送A后1.5秒并没有发射其他数据，所以A能成功发射。
@@ -401,11 +402,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
    * <p>可作用于Flowable,Observable，去掉数据源重复的数据。
    */
   private void distinctTest() {
-    Observable.just(2, 3, 4, 4, 2, 1).distinct().subscribe(System.out::print);
+    Observable.just(2, 3, 4, 4, 2, 1).distinct().subscribe(
+        integer -> Log.i( TAG, "distinctTest, accept: " + integer));
 
     // 打印:2 3 4 1
     // distinctUntilChanged()去掉相邻重复数据。
-    Observable.just(1, 1, 2, 1, 2, 3, 3, 4).distinctUntilChanged().subscribe(System.out::print);
+    Observable.just(1, 1, 2, 1, 2, 3, 3, 4).distinctUntilChanged().subscribe(
+        integer -> Log.i( TAG, "distinctTest, accept: " + integer));
     // 打印：1 2 1 2 3 4
   }
 
@@ -417,14 +420,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void elementAtTest() {
     Observable.just(2, 4, 3, 1, 5, 8)
         .elementAt(0)
-        .subscribe(integer -> Log.d("TAG", "elmentAt->" + integer));
+        .subscribe(integer -> Log.i( TAG, "elementAtTest, accept: " + integer));
     // 打印：2
     // elementAtOrError：指定元素的位置超过数据长度，则发射异常。
     Observable<String> source = Observable.just("Kirk", "Spock", "Chekov", "Sulu");
     Single<String> element = source.elementAtOrError(4);
     element.subscribe(
-        name -> System.out.println("onSuccess will not be printed!"),
-        error -> System.out.println("onError: " + error));
+        name -> Log.i( TAG, "onSuccess will not be printed!"),
+        error -> Log.i(TAG, "distinctTest, error: " + error.getMessage()));
     // 打印：onSuccess will not be printed!
   }
 
@@ -434,7 +437,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
    * <p>可作用于 Flowable,Observable,Maybe,Single。在filter中返回表示发射该元素，返回false表示过滤该数据。
    */
   private void filterTest() {
-    Observable.just(1, 2, 3, 4, 5, 6).filter(x -> x % 2 == 0).subscribe(System.out::print);
+    Observable.just(1, 2, 3, 4, 5, 6).filter(x -> x % 2 == 0).subscribe(
+        integer -> Log.i( TAG, "filterTest, accept: " + integer));
     // 打印：2 4 6
   }
 
@@ -446,14 +450,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void firstTest() {
     Observable<String> source = Observable.just("A", "B", "C");
     Single<String> firstOrDefault = source.first("D");
-    firstOrDefault.subscribe(System.out::println);
+    firstOrDefault.subscribe(s -> Log.i( TAG, "firstTest, accept: " + s));
     // 打印：A
 
     Observable<String> emptySource = Observable.empty();
     Single<String> firstOrError = emptySource.firstOrError();
     firstOrError.subscribe(
-        element -> System.out.println("onSuccess will not be printed!"),
-        error -> System.out.println("onError: " + error));
+        element -> Log.i(TAG, "firstTest, onSuccess will not be printed!"),
+        error -> Log.i( TAG, "firstTest, error: " + error.getMessage()));
     // 打印：onError: java.util.NoSuchElementException
     // 和firstElement的区别是first返回的是Single，而firstElement返回Maybe。firstOrError在没有数据会返回异常。
   }
@@ -466,19 +470,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void lastTest() {
     Observable<String> source = Observable.just("A", "B", "C");
     Single<String> lastOrDefault = source.last("D");
-    lastOrDefault.subscribe(System.out::println);
+    lastOrDefault.subscribe(s -> Log.i( TAG, "lastTest, accept: " + s));
     // 打印:C
 
     Observable<String> source2 = Observable.just("A", "B", "C");
     Maybe<String> last = source2.lastElement();
-    last.subscribe(System.out::println);
+    last.subscribe(s -> Log.i( TAG, "lastTest, accept: " + s));
     // 打印:C
 
     Observable<String> emptySource = Observable.empty();
     Single<String> lastOrError = emptySource.lastOrError();
     lastOrError.subscribe(
-        element -> System.out.println("onSuccess will not be printed!"),
-        error -> System.out.println("onError: " + error));
+        element -> Log.i(TAG, "lastTest, onSuccess will not be printed!"),
+        error -> Log.i( TAG, "lastTest, error: " + error.getMessage()));
     // 打印：onError: java.util.NoSuchElementException
   }
 
@@ -490,12 +494,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void ignoreElementTest() {
     Single<Long> source = Single.timer(1, TimeUnit.SECONDS);
     Completable completable = source.ignoreElement();
-    completable.doOnComplete(() -> System.out.println("Done!")).blockingAwait();
+    completable.doOnComplete(() -> Log.i(TAG, "ignoreElementTest, Done!")).blockingAwait();
     // 1秒后打印：Donde!
 
     Observable<Long> source2 = Observable.intervalRange(1, 5, 1, 1, TimeUnit.SECONDS);
     Completable completable2 = source2.ignoreElements();
-    completable2.doOnComplete(() -> System.out.println("Done!")).blockingAwait();
+    completable2.doOnComplete(() -> Log.i(TAG, "ignoreElementTest, Done!")).blockingAwait();
     // 五秒后打印：Done!
   }
 
@@ -507,7 +511,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void ofTypeTest() {
     Observable<Number> numbers = Observable.just(1, 4.0, 3, 2.71, 2f, 7);
     Observable<Integer> integers = numbers.ofType(Integer.class);
-    integers.subscribe((Integer x) -> System.out.print(x + " "));
+    integers.subscribe((Integer x) -> Log.i( TAG, "ofTypeTest, accept: " + x));
     // 打印:1 3 7
   }
 
@@ -536,9 +540,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         .subscribeOn(Schedulers.io())
         .sample(1, TimeUnit.SECONDS)
         .blockingSubscribe(
-            item -> System.out.print(item + " "),
+            item -> Log.i( TAG, "sampleTest, item: " + item),
             Throwable::printStackTrace,
-            () -> System.out.print("onComplete"));
+            () -> Log.i(TAG, "sampleTest, onComplete"));
 
     // 打印：C D onComplete
     // 与debounce的区别是，sample是以时间为周期的发射，一秒又一秒内的最新数据。而debounce是最后一个有效数据开始。
@@ -573,18 +577,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         .subscribeOn(Schedulers.io())
         .throttleFirst(1, TimeUnit.SECONDS)
         .blockingSubscribe(
-            item -> System.out.print(item + " "),
+            item -> Log.i( TAG, "throttleFirstTest, item: " + item),
             Throwable::printStackTrace,
-            () -> System.out.print(" onComplete"));
+            () -> Log.i(TAG, "throttleFirstTest, onComplete"));
     // 打印:A D onComplete
 
     source
         .subscribeOn(Schedulers.io())
         .throttleLast(1, TimeUnit.SECONDS)
         .blockingSubscribe(
-            item -> System.out.print(item + " "),
+            item -> Log.i( TAG, "throttleFirstTest, item: " + item),
             Throwable::printStackTrace,
-            () -> System.out.print(" onComplete"));
+            () -> Log.i(TAG, "throttleFirstTest, onComplete"));
 
     // 打印:C D onComplete
   }
@@ -625,19 +629,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         .subscribeOn(Schedulers.io())
         .throttleLatest(1, TimeUnit.SECONDS)
         .blockingSubscribe(
-            item -> Log.e("RxJava", item),
+            item -> Log.i( TAG, "throttleLatestTest, item: " + item),
             Throwable::printStackTrace,
-            () -> Log.e("RxJava", "finished"));
+            () -> Log.i(TAG, "throttleLatestTest, finished"));
   }
 
   /** 作用于Flowable、Observable，take发射前n个元素;takeLast发射后n个元素。 */
   private void takeAndtakeLastTest() {
     Observable<Integer> source = Observable.just(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
-    source.take(4).subscribe(System.out::print);
+    source.take(4).subscribe(integer -> Log.i( TAG, "takeAndtakeLastTest, accept: " + integer));
     // 打印:1 2 3 4
 
-    source.takeLast(4).subscribe(System.out::println);
+    source.takeLast(4).subscribe(integer -> Log.i( TAG, "takeAndtakeLastTest, accept: " + integer));
     // 打印:7 8 9 10
   }
 
@@ -666,9 +670,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     source
         .timeout(1, TimeUnit.SECONDS)
         .subscribe(
-            item -> System.out.println("onNext: " + item),
-            error -> System.out.println("onError: " + error),
-            () -> System.out.println("onComplete will not be printed!"));
+            item -> Log.i( TAG, "timeoutTest, item: " + item),
+            error -> Log.i( TAG, "timeoutTest, error: " + error),
+            () -> Log.i(TAG, "timeoutTest, onComplete will not be printed!"));
     // 打印:
     // onNext: A
     // onNext: B
@@ -682,7 +686,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void startWithTest() {
     Observable<String> names = Observable.just("Spock", "McCoy");
     Observable<String> otherNames = Observable.just("Git", "Code", "8");
-    names.startWith(otherNames).subscribe(item -> Log.d(TAG, item));
+    names.startWith(otherNames).subscribe(item -> Log.i( TAG, "startWithTest, item: " + item));
 
     // 打印：
     // RxJava: Git
@@ -698,7 +702,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Observable<String> names = Observable.just("Hello", "world");
     Observable<String> otherNames = Observable.just("Git", "Code", "8");
 
-    Observable.merge(names, otherNames).subscribe(name -> Log.d(TAG, name));
+    Observable.merge(names, otherNames).subscribe(name -> Log.i( TAG, "mergeTest, name: " + name));
 
     // 也可以是
     // names.mergeWith(otherNames).subscribe(name -> Log.d(TAG,name));
@@ -714,8 +718,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Observable<String> names2 = Observable.just("Hello", "world");
     Observable<String> otherNames2 = Observable.just("Git", "Code", "8");
     Observable<String> error2 = Observable.error(new NullPointerException("Error!"));
-    Observable.mergeDelayError(names2, error2, otherNames2)
-        .subscribe(name -> Log.d(TAG, name), e -> Log.d(TAG, e.getMessage()));
+    Observable.mergeDelayError(names2, error2, otherNames2).subscribe(
+        name -> Log.i(TAG, "mergeTest, name: " + name),
+        e -> Log.i(TAG, "mergeTest, error: " + e.getMessage()));
 
     // 打印：
     // RxJava: Hello
@@ -735,7 +740,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Observable<String> otherNames = Observable.just("Git", "Code", "8");
     names
         .zipWith(otherNames, (first, last) -> first + "-" + last)
-        .subscribe(item -> Log.d(TAG, item));
+        .subscribe(item -> Log.i( TAG, "zipTest, accept: " + item));
 
     // 打印：
     // RxJava: Hello-Git
@@ -746,7 +751,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void bufferTest() {
     Observable.range(0, 10)
         .buffer(4)
-        .subscribe((List<Integer> buffer) -> System.out.println(buffer));
+        .subscribe((List<Integer> buffer) -> Log.i( TAG, "bufferTest, accept: " + buffer));
     // 打印:
     // [0, 1, 2, 3]
     // [4, 5, 6, 7]
@@ -760,7 +765,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     numbers
         .filter((Number x) -> Integer.class.isInstance(x))
         .cast(Integer.class)
-        .subscribe((Integer x) -> System.out.println(x));
+        .subscribe((Integer x) -> Log.i( TAG, "castTest, accept: " + x));
     // prints:
     // 1
     // 7
@@ -775,13 +780,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         .concatMap(
             i -> {
               long delay = Math.round(Math.random() * 2);
-
               return Observable.timer(delay, TimeUnit.SECONDS).map(n -> i);
             })
-        .blockingSubscribe(System.out::print);
-
+        .blockingSubscribe(integer -> Log.i( TAG, "concatMapTest, accept: " + integer));
     // prints 01234
-
   }
 
   /** 与concatMap作用相同，只是将过程发送的所有错误延迟到最后处理。 */
@@ -796,8 +798,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
               }
             })
         .blockingSubscribe(
-            x -> System.out.println("onNext: " + x),
-            error -> System.out.println("onError: " + error.getMessage()));
+            x -> Log.i( TAG, "concatMapDelayErrorTest, accept: " + x),
+            error -> Log.i( TAG, "concatMapDelayErrorTest, error: " + error.getMessage()));
     // prints:
     // onNext: 2
     // onNext: 4
@@ -816,11 +818,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             x -> {
               return Completable.timer(x, TimeUnit.SECONDS)
                   .doOnComplete(
-                      () -> System.out.println("Info: Processing of item \"" + x + "\" completed"));
+                      () -> Log.i( TAG, "concatMapCompletableTest, accept: " + x));
             });
 
     completable
-        .doOnComplete(() -> System.out.println("Info: Processing of all items completed"))
+        .doOnComplete(() -> Log.i(TAG, "concatMapCompletableTest, Info: Processing of all items completed"))
         .blockingAwait();
 
     // prints:
@@ -843,12 +845,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return Completable.timer(1, TimeUnit.SECONDS)
                     .doOnComplete(
                         () ->
-                            System.out.println("Info: Processing of item \"" + x + "\" completed"));
+                            Log.i( TAG, "concatMapCompletableDelayErrorTest, accept: " + x));
               }
             });
 
     completable
-        .doOnError(error -> System.out.println("Error: " + error.getMessage()))
+        .doOnError(error -> Log.i( TAG, "concatMapCompletableDelayErrorTest, error: " + error.getMessage()))
         .onErrorComplete()
         .blockingAwait();
 
@@ -866,7 +868,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
               return Observable.intervalRange(1, 3, 0, 1, TimeUnit.SECONDS)
                   .map(b -> '(' + a + ", " + b + ')');
             })
-        .blockingSubscribe(System.out::println);
+        .blockingSubscribe(s -> Log.i( TAG, "flatMapTest, accept: " + s));
 
     // prints (not necessarily in this order):
     // (A, 1)
@@ -889,7 +891,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             x -> {
               return Arrays.asList(x, Math.pow(x, 2), Math.pow(x, 3));
             });
-    flowable.subscribe(x -> System.out.println("onNext: " + x));
+    flowable.subscribe(x -> Log.i( TAG, "flattenAsFlowableAndFlattenAsObservableTest, accept: " + x));
 
     // prints:
     // onNext: 2.0
@@ -906,7 +908,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     animals
         .groupBy(animal -> animal.charAt(0), String::toUpperCase)
         .concatMapSingle(Observable::toList)
-        .subscribe(System.out::println);
+        .subscribe(strings -> {
+          for (String string : strings) {
+            Log.i( TAG, "groupByTest, accept: " + string);
+          }
+        });
 
     // prints:
     // [TIGER, TURTLE]
@@ -919,7 +925,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void scanTest() {
     Observable.just(5, 3, 8, 1, 7)
         .scan(0, (partialSum, x) -> partialSum + x)
-        .subscribe(System.out::println);
+        .subscribe(integer -> Log.i( TAG, "scanTest, accept: " + integer));
 
     // prints:
     // 0
@@ -943,7 +949,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                   .map(String::valueOf)
                   .reduce(new StringJoiner(", ", "[", "]"), StringJoiner::add);
             })
-        .subscribe(System.out::println);
+        .subscribe(stringJoiner -> Log.i( TAG, "windowTest, accept: " + stringJoiner));
 
     // prints:
     // [1, 2]
@@ -954,29 +960,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
    * 作用于Flowable、Observable、Maybe、Single。但调用数据源的onError函数后会回到该函数，可对错误进行处理，然后返回值，会调用观察者onNext()继续执行，执行完调用onComplete()函数结束所有事件的发射。
    */
   private void onErrorReturnTest() {
-    Single.just("2A")
-        .map(v -> Integer.parseInt(v, 10))
-        .onErrorReturn(
-            error -> {
-              if (error instanceof NumberFormatException) {
-                return 0;
-              }
-              throw new IllegalArgumentException();
-            })
-        .subscribe(
-            System.out::println, error -> System.err.println("onError should not be printed!"));
-
+    Single.just("2A").map(v -> Integer.parseInt(v, 10)).onErrorReturn(error -> {
+      if (error instanceof NumberFormatException) {
+        return 0;
+      }
+      throw new IllegalArgumentException();
+    }).subscribe(
+        integer -> Log.i(TAG, "onErrorReturnTest, accept: " + integer),
+        error -> Log.i(TAG, "onErrorReturnTest, onError should not be printed!"));
     // prints 0
   }
 
   /** 与onErrorReturn类似，onErrorReturnItem不对错误进行处理，直接返回一个值。 */
   private void onErrorReturnItemTest() {
-    Single.just("2A")
-        .map(v -> Integer.parseInt(v, 10))
-        .onErrorReturnItem(0)
-        .subscribe(
-            System.out::println, error -> System.err.println("onError should not be printed!"));
-
+    Single.just("2A").map(v -> Integer.parseInt(v, 10)).onErrorReturnItem(0).subscribe(
+        integer -> Log.i(TAG, "onErrorReturnItemTest, accept: " + integer),
+        error -> Log.i(TAG, "onErrorReturnItemTest, onError should not be printed!"));
     // prints 0
   }
 
@@ -997,29 +996,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 })
         .onErrorResumeNext(
             throwable -> {
-              Log.d(TAG, "onErrorResumeNext ");
+              Log.i(TAG, "onExceptionResumeNextTest, onErrorResumeNext");
               return Observable.just(4);
             })
         .subscribe(
             new Observer<Integer>() {
               @Override
               public void onSubscribe(Disposable d) {
-                Log.d(TAG, "onSubscribe ");
+                Log.i(TAG, "onExceptionResumeNextTest, onSubscribe");
               }
 
               @Override
               public void onNext(Integer integer) {
-                Log.d(TAG, "onNext " + integer);
+                Log.i( TAG, "onExceptionResumeNextTest, onNext: " + integer);
               }
 
               @Override
               public void onError(Throwable e) {
-                Log.d(TAG, "onError ");
+                Log.i( TAG, "onExceptionResumeNextTest, onError: " + e.getMessage());
               }
 
               @Override
               public void onComplete() {
-                Log.d(TAG, "onComplete ");
+                Log.i(TAG, "onExceptionResumeNextTest, onComplete");
               }
             });
   }
@@ -1044,22 +1043,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             new Observer<Integer>() {
               @Override
               public void onSubscribe(Disposable d) {
-                Log.d(TAG, "onSubscribe ");
+                Log.i(TAG, "retryTest, onSubscribe");
               }
 
               @Override
               public void onNext(Integer integer) {
-                Log.d(TAG, "onNext " + integer);
+                Log.i( TAG, "retryTest, onNext: " + integer);
               }
 
               @Override
               public void onError(Throwable e) {
-                Log.d(TAG, "onError ");
+                Log.i( TAG, "retryTest, onError: " + e.getMessage());
               }
 
               @Override
               public void onComplete() {
-                Log.d(TAG, "onComplete ");
+                Log.i(TAG, "retryTest, onComplete");
               }
             });
   }
@@ -1084,22 +1083,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             new Observer<Integer>() {
               @Override
               public void onSubscribe(Disposable d) {
-                Log.d(TAG, "onSubscribe ");
+                Log.i(TAG, "retryUntilTest, onSubscribe");
               }
 
               @Override
               public void onNext(Integer integer) {
-                Log.d(TAG, "onNext " + integer);
+                Log.i( TAG, "retryUntilTest, onNext: " + integer);
               }
 
               @Override
               public void onError(Throwable e) {
-                Log.d(TAG, "onError ");
+                Log.i( TAG, "retryUntilTest, onError: " + e.getMessage());
               }
 
               @Override
               public void onComplete() {
-                Log.d(TAG, "onComplete ");
+                Log.i(TAG, "retryUntilTest, onComplete");
               }
             });
   }
